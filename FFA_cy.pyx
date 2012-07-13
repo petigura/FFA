@@ -125,7 +125,7 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] group0,
         Bs = Bshft[iRow]
         # Loop over the columns in the group
         for iCol in range(nColGroup):
-            iBCol = (iCol - Bs + nColGroup) % nColGroup
+            iBCol = (iCol + Bs + nColGroup) % nColGroup
             group[iRow,iCol] += group0[iA,iCol] 
             group[iRow,iCol] += group0[iB,iBCol]
     return group 
