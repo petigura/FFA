@@ -87,7 +87,7 @@ def FFAButterfly(stage):
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
-def FFAGroupShiftAdd(group00,
+def FFAGroupShiftAdd(group0,
                      cnp.ndarray[cnp.int64_t, ndim=1] Arow,
                      cnp.ndarray[cnp.int64_t, ndim=1] Brow,
                      cnp.ndarray[cnp.int64_t, ndim=1] Bshft,
@@ -106,15 +106,16 @@ def FFAGroupShiftAdd(group00,
     """
 
     maxShft = max(Bshft)
-    group00 = np.hstack( [group00 , group00[:,: maxShft]] )    
-    cdef cnp.ndarray[cnp.float64_t, ndim=2] group0 = group00
-
-
     cdef int iRow,iCol,iA,iB,Bs
-    cdef int nRowGroup = group00.shape[0]
-    cdef int nColGroup = group00.shape[1]
+    cdef int nRowGroup = group0.shape[0]
+    cdef int nColGroup = group0.shape[1]
+    
+    cdef cnp.ndarray[cnp.float64_t, ndim=2] group = np.zeros((nRowGroup,nColGroup))
+    group0 = np.hstack( [group0, group0[:,: maxShft]] )    
 
-    cdef cnp.ndarray[cnp.float64_t, ndim=2] group
+
+
+
 
     # Grow group by the maximum shift value
     # Loop over rows in group
