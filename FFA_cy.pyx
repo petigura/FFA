@@ -87,7 +87,8 @@ def FFAButterfly(stage):
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
-def FFAGroupShiftAdd(group0,
+@cython.profile(True)
+def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] group0,
                      cnp.ndarray[cnp.int64_t, ndim=1] Arow,
                      cnp.ndarray[cnp.int64_t, ndim=1] Brow,
                      cnp.ndarray[cnp.int64_t, ndim=1] Bshft,
@@ -161,7 +162,7 @@ def FFAShiftAdd(XW0,stage):
         start = iGroup*nRowGroup
         stop  = (iGroup+1)*nRowGroup
         sG = slice(start,stop)
-        XW[sG] = FFAGroupShiftAdd(XW0[sG],Arow,Brow,Bshft)
+        XW[sG] = FFAGroupShiftAdd(XW0[sG].astype(float),Arow,Brow,Bshft)
 
     return XW
 
