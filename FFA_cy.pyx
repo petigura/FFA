@@ -113,6 +113,10 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] group0,
     
     cdef cnp.ndarray[cnp.float64_t, ndim=2] group = np.zeros((nRowGroup,nColGroup))
 
+
+
+
+
     # Grow group by the maximum shift value
     # Loop over rows in group
     for iRow in range(nRowGroup):
