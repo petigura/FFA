@@ -112,7 +112,6 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] group0,
     cdef int nColGroup = group0.shape[1]
     
     cdef cnp.ndarray[cnp.float64_t, ndim=2] group = np.zeros((nRowGroup,nColGroup))
-    group0 = np.hstack( [group0, group0[:,: maxShft]] )    
 
     # Grow group by the maximum shift value
     # Loop over rows in group
@@ -122,8 +121,9 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] group0,
         Bs = Bshft[iRow]
         # Loop over the columns in the group
         for iCol in range(nColGroup):
-            group[iRow,iCol] = group0[iA,iCol] + group0[iB,Bs+iCol]
-
+            iBCol = (iCol - Bs + nColGroup) % nColGroup
+            group[iRow,iCol] += group0[iA,iCol] 
+            group[iRow,iCol] += group0[iB,iBCol]
     return group 
 
 def FFAShiftAdd(XW0,stage):
