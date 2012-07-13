@@ -5,6 +5,7 @@ cimport cython
 cimport numpy as cnp
 # cython: cdivision   = True
 
+@cython.profile(True)
 def FFA(XW):
     """
     Fast Folding Algorithm
@@ -53,9 +54,10 @@ def FFA(XW):
 
     XWFS = XW.copy()
     for stage in range(1,nStage+1):
-        XWFS = FFAShiftAdd(XWFS,stage) 
+        XWFS = FFAShiftAdd(XWFS.astype(float),stage) 
     return XWFS
 
+@cython.profile(True)
 def FFAButterfly(stage):
     """
     FFA Butterfly
@@ -88,7 +90,8 @@ def FFAButterfly(stage):
 @cython.wraparound(False)
 @cython.boundscheck(False)
 @cython.profile(True)
-def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] group0,
+@cython.cdivision(True)
+def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2,mode='c'] group0,
                      cnp.ndarray[cnp.int64_t, ndim=1] Arow,
                      cnp.ndarray[cnp.int64_t, ndim=1] Brow,
                      cnp.ndarray[cnp.int64_t, ndim=1] Bshft,
@@ -113,10 +116,6 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] group0,
     
     cdef cnp.ndarray[cnp.float64_t, ndim=2] group = np.zeros((nRowGroup,nColGroup))
 
-
-
-
-
     # Grow group by the maximum shift value
     # Loop over rows in group
     for iRow in range(nRowGroup):
@@ -130,7 +129,9 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] group0,
             group[iRow,iCol] += group0[iB,iBCol]
     return group 
 
-def FFAShiftAdd(XW0,stage):
+@cython.profile(True)
+def FFAShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] XW0,
+                int stage):
     """
     FFA Shift and Add
 
@@ -157,16 +158,20 @@ def FFAShiftAdd(XW0,stage):
                [ 0.,  0.,  1.,  1.],
                [ 0.,  0.,  2.,  0.]])
     """
-    nRow      = XW0.shape[0]
+    cdef int nRow,nCol,nGroup,nRowGroup,iGroup,start,stop
+    cdef cnp.ndarray[cnp.float64_t, ndim=2] XW
+
+    nRow = XW0.shape[0]
+    nCol = XW0.shape[1]
     nRowGroup = 2**stage
     nGroup    = nRow/nRowGroup
-    XW        = np.empty(XW0.shape)
+    XW =  np.zeros((nRow,nCol),dtype=float)
+
     Arow,Brow,Bshft = FFAButterfly(stage)
     for iGroup in range(nGroup):
         start = iGroup*nRowGroup
         stop  = (iGroup+1)*nRowGroup
-        sG = slice(start,stop)
-        XW[sG] = FFAGroupShiftAdd(XW0[sG].astype(float),Arow,Brow,Bshft)
+        XW[start:stop] = FFAGroupShiftAdd(XW0[start:stop],Arow,Brow,Bshft)
 
     return XW
 
