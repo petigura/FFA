@@ -4,6 +4,7 @@ import numpy as np
 from numpy import ma
 
 # cython: profile=True
+# cython: cdivision=True
 cimport cython
 cimport numpy as cnp
 @cython.profile(True)
@@ -53,7 +54,7 @@ def FFA(XW):
     assert np.allclose(nStage,np.round(nStage)),"nRow must be power of 2"    
     nStage = int(nStage)
 
-    XWFS = XW.copy()
+    XWFS = XW.copy().astype(float)
     for stage in range(1,nStage+1):
         XWFS = FFAShiftAdd(XWFS,stage) 
     return XWFS
@@ -91,7 +92,8 @@ def FFAButterfly(stage):
 @cython.wraparound(False)
 @cython.boundscheck(False)
 @cython.profile(True)
-def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2,mode='fortran'] group0,
+#@cython.cdivision(True)
+def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2,mode='c'] group0,
                      cnp.ndarray[cnp.int64_t, ndim=1] Arow,
                      cnp.ndarray[cnp.int64_t, ndim=1] Brow,
                      cnp.ndarray[cnp.int64_t, ndim=1] Bshft):
@@ -125,7 +127,6 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2,mode='fortran'] group0,
 
     cdef int iRow,iCol,iA,iB,Bs,iBCol
 
-    maxShft = max(Bshft)
     cdef int nRowGroup = group0.shape[0]
     cdef int nColGroup = group0.shape[1]
     cdef cnp.ndarray[cnp.float64_t, ndim=2] group = np.zeros((nRowGroup,nColGroup),dtype=float)
@@ -147,7 +148,8 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2,mode='fortran'] group0,
 @cython.wraparound(False)
 @cython.boundscheck(False)
 @cython.profile(True)
-def FFAShiftAdd(XW0,stage):
+def FFAShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2,mode='c'] XW0,
+                int stage):
     """
     FFA Shift and Add
 
@@ -174,17 +176,20 @@ def FFAShiftAdd(XW0,stage):
                [ 0.,  0.,  1.,  1.],
                [ 0.,  0.,  2.,  0.]])
     """
+    cdef int nRow,nRowGroup,nGroup,iGroup
+
     nRow      = XW0.shape[0]
+    nCol      = XW0.shape[1]
     nRowGroup = 2**stage
     nGroup    = nRow/nRowGroup
-    XW        = np.empty(XW0.shape)
+    cdef cnp.ndarray[cnp.float64_t, ndim=2] XW = np.zeros((nRow,nCol),dtype=float)
+
     Arow,Brow,Bshft = FFAButterfly(stage)
     for iGroup in range(nGroup):
         start = iGroup*nRowGroup
         stop  = (iGroup+1)*nRowGroup
         sG = slice(start,stop)
-
-        temp = np.asfortranarray(XW0[sG].astype(float))
+        temp = XW0[sG].astype(float)
         XW[sG] = FFAGroupShiftAdd(temp,Arow,Brow,Bshft)
 
     return XW
