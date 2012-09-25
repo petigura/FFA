@@ -155,7 +155,7 @@ def FFAShiftAdd(XW0,stage):
 
     return XW
 
-def XWrap(x,Pcad0,rem,fill_value=0,pow2=False):
+def XWrap(x,Pcad,fill_value=0,pow2=False):
     """
     Extend and wrap array.
     
@@ -178,7 +178,10 @@ def XWrap(x,Pcad0,rem,fill_value=0,pow2=False):
 
     ncad = x.size # Number of cadences
     # for some reason np.ceil(ncad/Pcad0) doesn't work!
+    Pcad0 = np.floor(Pcad)
     nrow = int( np.floor(ncad/Pcad0) +1 )
+    rem = np.round(nrow * (Pcad - Pcad0))
+
     nExtend = nrow * Pcad0 - ncad # Pad out remainder of array with 0s.
 
     if type(x) is np.ma.core.MaskedArray:
@@ -263,7 +266,7 @@ def remShuffle(shape,rem):
     """
     nrow,ncol = shape
 
-    assert (rem >= 0) & (rem<=ncol), 'rem must be >= 0 and <= ncol '
+    assert (rem >= 0) & (rem<=nrow), 'rem must be >= 0 and <= ncol '
 
     irow,icol = np.mgrid[0:nrow,0:ncol]
     colshift  = np.linspace(0,rem,nrow)

@@ -175,7 +175,7 @@ def FFAShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] XW0,
 
     return XW
 
-def XWrap(x,Pcad0,rem,fill_value=0,pow2=False):
+def XWrap(x,Pcad,fill_value=0):
     """
     Extend and wrap array.
     
@@ -184,11 +184,8 @@ def XWrap(x,Pcad0,rem,fill_value=0,pow2=False):
 
     Parameters
     ----------
-
     x     : input
-    Pcad0 : Base period
-    rem   : The actual period can be longer by rem/nrow
-    pow2  : If true, pad out nRows so that it's the next power of 2.
+    Pcad  : Period to fold on.  Can be non-integer, only accurate to 1./Pcad0
 
     Return
     ------
@@ -198,7 +195,9 @@ def XWrap(x,Pcad0,rem,fill_value=0,pow2=False):
 
     ncad = x.size # Number of cadences
     # for some reason np.ceil(ncad/Pcad0) doesn't work!
+    Pcad0 = np.floor(Pcad)
     nrow = int( np.floor(ncad/Pcad0) +1 )
+    rem  = int(np.round(Pcad0 * (Pcad-Pcad0)  ))
     nExtend = nrow * Pcad0 - ncad # Pad out remainder of array with 0s.
 
     if type(x) is np.ma.core.MaskedArray:
