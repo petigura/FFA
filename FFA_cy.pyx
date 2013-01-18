@@ -54,48 +54,18 @@ def FFA(XW):
 
     XWFS = XW.copy()
     for stage in range(1,nStage+1):
-        XWFS = FFAShiftAdd(XWFS.astype(float),stage) 
+        XWFS = FFAShiftAdd(XWFS.astype(np.float32),stage) 
     return XWFS
-
-@cython.profile(True)
-def FFAButterfly(stage):
-    """
-    FFA Butterfly
-
-    The FFA adds pairs of rows A and B. B is shifted.  FFAButterfly
-    computes A, B, and the amount by which B is shifted
-
-    Parameters
-    ----------
-    
-    stage : FFA builds up by stages.  Stage 1 shuffles adjacent rows
-            (nRowGroup = 2) while stage K shuffles all M = 2**K rows
-            (nRowGroup = M).
-
-    """
-    nRowGroup = 2**stage
-
-    Arow  = np.empty(nRowGroup,dtype=int)
-    Brow  = np.empty(nRowGroup,dtype=int)
-    Bshft = np.empty(nRowGroup+2,dtype=int)
-
-    Arow[0::2] = Arow[1::2] = np.arange(0,nRowGroup/2)
-    Brow[0::2] = Brow[1::2] = np.arange(nRowGroup/2,nRowGroup)
-    Bshft[0::2] = Bshft[1::2] = np.arange(0,nRowGroup/2+1)
-    Bshft =  Bshft[1:-1]
-
-    return Arow,Brow,Bshft
-
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
 @cython.profile(True)
 @cython.cdivision(True)
-def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2,mode='c'] group0,
-                     cnp.ndarray[cnp.int64_t, ndim=1] Arow,
-                     cnp.ndarray[cnp.int64_t, ndim=1] Brow,
-                     cnp.ndarray[cnp.int64_t, ndim=1] Bshft,
-                     ):
+def FFAGroupShiftAdd(cnp.ndarray[cnp.float32_t, ndim=2,mode='c'] group0,
+                     cnp.ndarray[cnp.float32_t, ndim=2,mode='c'] group,
+                     int nRowGroup,
+                     int nColGroup):
+
     """
     FFA Shift and Add
 
@@ -108,29 +78,23 @@ def FFAGroupShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2,mode='c'] group0,
              shape(group0) = (M,P0) where M is a power of 2.
 
     """
-
-    maxShft = max(Bshft)
-    cdef int iRow,iCol,iA,iB,Bs
-    cdef int nRowGroup = group0.shape[0]
-    cdef int nColGroup = group0.shape[1]
-    
-    cdef cnp.ndarray[cnp.float64_t, ndim=2] group = np.zeros((nRowGroup,nColGroup))
+    cdef int iRow,iCol,iA,iB,Bs,i,j,jB
+    cdef int nRowGroupOn2 = nRowGroup / 2 # Half the group size
 
     # Grow group by the maximum shift value
     # Loop over rows in group
-    for iRow in range(nRowGroup):
-        iA = Arow[iRow]
-        iB = Brow[iRow]
-        Bs = Bshft[iRow]
+    for i in range(nRowGroup):
+        iA = i/2                 # Row in the group that A is draw from
+        iB = iA + nRowGroupOn2   # Row in group that B is drawn from
+        Bs = (i + 1) / 2
         # Loop over the columns in the group
-        for iCol in range(nColGroup):
-            iBCol = (iCol + Bs + nColGroup) % nColGroup
-            group[iRow,iCol] += group0[iA,iCol] 
-            group[iRow,iCol] += group0[iB,iBCol]
-    return group 
+        for j in range(nColGroup):
+            jB = (j + Bs + nColGroup) % nColGroup
+            group[i,j] = group0[iA,j] + group0[iB,jB]
+    
 
 @cython.profile(True)
-def FFAShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] XW0,
+def FFAShiftAdd(cnp.ndarray[cnp.float32_t, ndim=2] XW0,
                 int stage):
     """
     FFA Shift and Add
@@ -159,19 +123,17 @@ def FFAShiftAdd(cnp.ndarray[cnp.float64_t, ndim=2] XW0,
                [ 0.,  0.,  2.,  0.]])
     """
     cdef int nRow,nCol,nGroup,nRowGroup,iGroup,start,stop
-    cdef cnp.ndarray[cnp.float64_t, ndim=2] XW
+    cdef cnp.ndarray[cnp.float32_t, ndim=2] XW
 
     nRow = XW0.shape[0]
     nCol = XW0.shape[1]
     nRowGroup = 2**stage
     nGroup    = nRow/nRowGroup
-    XW =  np.zeros((nRow,nCol),dtype=float)
-
-    Arow,Brow,Bshft = FFAButterfly(stage)
+    XW =  np.zeros((nRow,nCol),dtype=np.float32)
     for iGroup in range(nGroup):
         start = iGroup*nRowGroup
         stop  = (iGroup+1)*nRowGroup
-        XW[start:stop] = FFAGroupShiftAdd(XW0[start:stop],Arow,Brow,Bshft)
+        FFAGroupShiftAdd(XW0[start:stop],XW[start:stop],nRowGroup,nCol)
 
     return XW
 
