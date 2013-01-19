@@ -1,6 +1,5 @@
 import numpy as np
 from numpy import ma
-
 cimport cython
 cimport numpy as cnp
 # cython: cdivision   = True

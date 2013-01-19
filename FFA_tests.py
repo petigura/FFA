@@ -1,5 +1,6 @@
 import numpy as np
 import FFA_cy as FFA
+#import FFA_cext as FFA
 
 datadir = 'sample_data/'
 class TestClass:
