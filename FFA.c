@@ -1,4 +1,6 @@
-#include "FFAGroupShiftAdd.h"
+#include "FFA.h"
+#include <stdio.h>
+
 void FFAGroupShiftAdd(float* group0, float* group, int nRowGroup,int nColGroup)
 {
   int iA,iB,Bs,jB,i,j,step,stepA,stepB;
@@ -59,5 +61,39 @@ void FFA_ext(float* XW0, float* XW, int nRow, int nCol, int nStage)
 
       FFAShiftAdd(old,new,stage,nRow,nCol) ;
     }
+}
 
+int main(int argc, char *argv[])
+{
+
+  int N  = atoi(argv[2]);
+  int P0 = atoi(argv[3]);
+  float XW0[N];
+  float XW[N];
+
+  FILE *infile;
+
+  infile = fopen(argv[1], "r");
+
+  int i=0;
+  while(!feof(infile))
+    {
+      fscanf(infile,"%f",&XW0[i]);
+      i++;
+    }
+
+  fclose(infile);
+
+  int nStage = 1;
+  int nRow   = N/P0;
+  while (nRow >> nStage != 1)
+    {
+      nStage++;
+    }
+  printf("%d %d %d \n",N,P0,nStage);
+  for (i=0;i<1;i++)
+    {
+      FFA_ext(XW0,XW,nRow,P0,nStage);
+    }
+  return 0;
 }
