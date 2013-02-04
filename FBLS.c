@@ -26,45 +26,60 @@ kMa   : Epoch corresponding to s2nMa. [0, P-1]
 */
 
 
-void maxDelTt0(double* XsumP, double* XcntP, int P, 
-	       int* DelTarr, double* noiseG, int nDelT,
+void maxDelTt0(double* XsumP, double* XXsumP, double* XcntP, int P, 
+	       int* DelTarr, int nDelT,
 	       double* s2nMa, int* iMa, int* kMa)
 {
   int i,k,DelT;
-  double noise, s2n, mBefore,mAfter,mDuring,mDepth;
+  double noise, s2n, mBefore,mAfter,mDuring,mDepth,sigma;
 
   double XsumPDelT[P];
+  double XXsumPDelT[P];
   double XcntPDelT[P];
   
 
-  int kBefore, kAfter;  
+  int kBefore, kAfter;
   for (i=0; i<nDelT; i++)
     {
 
       DelT = DelTarr[i];
-      noise  = noiseG[i];
-      
+
       boxsum(XsumP,P,DelT,XsumPDelT);
+      boxsum(XXsumP,P,DelT,XXsumPDelT);
       boxsum(XcntP,P,DelT,XcntPDelT);
 
       // now find the max
-      for (k=0;k<P;k++)
+      k=0;
+      kBefore = P - DelT;
+      kAfter  = k + DelT;
+      for ( ; k<P ; k++, kBefore++, kAfter++ )
 	{
-	  kBefore = (k+P - DelT) % P ; // The i+N correctly wraps negative 
-	  kAfter  = (k+P + DelT) % P ; // indecies
+	  if (kBefore==P){kBefore=0;}
+	  if (kAfter ==P){kAfter=0;}
 
-	  mBefore  = XsumPDelT[kBefore] / XcntPDelT[kBefore] ;
+	  mBefore  = XsumPDelT[kBefore] / XcntPDelT[kBefore];
 	  mAfter   = XsumPDelT[kAfter]  / XcntPDelT[kAfter] ;
-	  mDuring  = XsumPDelT[k]       / XcntPDelT[k] ;
-	  mDepth   = 0.5* (mBefore + mAfter) - mDuring ;
+	  mDuring  = XsumPDelT[k]       / XcntPDelT[k]      ;
 
-	  s2n = mDepth / noise * sqrt(XcntPDelT[k] / (double)DelT);
+	  mDepth   = 0.5* (mBefore + mAfter) - mDuring ;
+	  
+	  sigma = sqrt( XXsumPDelT[k] / XcntPDelT[k] - mDuring*mDuring );
+	  s2n   = mDepth / sigma * sqrt(XcntPDelT[k]) ;
+
 	  if (s2n > *s2nMa)
 	    {
 	      *s2nMa = s2n;
 	      *iMa   = i;
 	      *kMa   = k;
+
+	  if (s2n > 10)
+	    {
+	      printf("%f %i %f %f %f\n",mDepth,DelT,sigma,s2n,XcntPDelT[k]);
 	    }
+
+
+	    }
+
 	}
     }
 }

@@ -6,8 +6,8 @@ cimport cython
 cimport numpy as cnp
 
 cdef extern from "FBLS.h": 
-    void maxDelTt0(double* XsumP, double* XcntP, int P, 
-                   int* DelTarr, double* noiseG, int nDelT,
+    void maxDelTt0(double* XsumP, double* XXsumP, double* XcntP, int P, 
+                   int* DelTarr, int nDelT,
                    double* s2nMa, int* iMa, int* kMa)
     void boxsum(double *X, int N, int DeltaT, double* Xout)
     void hat(double* X, int N, int DeltaT, double* Xout)
@@ -15,10 +15,10 @@ cdef extern from "FBLS.h":
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def cmaxDelTt0( cnp.ndarray[double, ndim=2,mode='c'] XsumP,
+                cnp.ndarray[double, ndim=2,mode='c'] XXsumP,
                 cnp.ndarray[double, ndim=2,mode='c'] XcntP,
                 int P,
                 cnp.ndarray[int, ndim=1,mode='c'] DelTarr,
-                cnp.ndarray[double, ndim=1,mode='c'] noiseG,
                 int nDelT):
                 
 
@@ -30,8 +30,8 @@ def cmaxDelTt0( cnp.ndarray[double, ndim=2,mode='c'] XsumP,
     cdef cnp.ndarray[int, ndim=1,mode='c']    kMa   = np.zeros(M,np.int32) -1
 
     for j in range(M):
-        maxDelTt0( &XsumP[j,0], &XcntP[j,0], P,
-                    &DelTarr[0], &noiseG[0], nDelT,
+        maxDelTt0( &XsumP[j,0], &XXsumP[j,0], &XcntP[j,0], P,
+                    &DelTarr[0], nDelT,
                     &s2nMa[j], &iMa[j], &kMa[j])
 
     return s2nMa,iMa,kMa
