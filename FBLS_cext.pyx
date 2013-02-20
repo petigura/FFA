@@ -30,8 +30,9 @@ def cmaxDelTt0( cnp.ndarray[double, ndim=2,mode='c'] XsumP,
     cdef cnp.ndarray[int, ndim=1,mode='c']    kMa   = np.zeros(M,np.int32) -1
 
     for j in range(M):
-        maxDelTt0( &XsumP[j,0], &XXsumP[j,0], &XcntP[j,0], P,
-                    &DelTarr[0], nDelT,
-                    &s2nMa[j], &iMa[j], &kMa[j])
+        if j==7:
+            maxDelTt0( &XsumP[j,0], &XXsumP[j,0], &XcntP[j,0], P,
+                        &DelTarr[0], nDelT,
+                        &s2nMa[j], &iMa[j], &kMa[j])
 
     return s2nMa,iMa,kMa

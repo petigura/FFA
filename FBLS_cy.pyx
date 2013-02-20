@@ -140,34 +140,3 @@ def hat(np.ndarray[DTYPE_t, ndim=1,mode='c'] X,
 
     return res
 
-
-#def FFAGroupShiftAdd(cnp.ndarray[cnp.float32_t, ndim=2,mode='c'] group0,
-#                     cnp.ndarray[cnp.float32_t, ndim=2,mode='c'] group,
-#                     int nRowGroup,
-#                     int nColGroup):
-#
-#    """
-#    FFA Shift and Add
-#
-#    Add the rows of `group` to each other.
-#    
-#    Parameters
-#    ----------
-#
-#    group0 : Initial group before shuffling and adding. 
-#             shape(group0) = (M,P0) where M is a power of 2.
-#
-#    """
-#    cdef int iRow,iCol,iA,iB,Bs,i,j,jB
-#    cdef int nRowGroupOn2 = nRowGroup / 2 # Half the group size
-#
-#    # Grow group by the maximum shift value
-#    # Loop over rows in group
-#    for i in range(nRowGroup):
-#        iA = i/2                 # Row in the group that A is draw from
-#        iB = iA + nRowGroupOn2   # Row in group that B is drawn from
-#        Bs = (i + 1) / 2
-#        # Loop over the columns in the group
-#        for j in range(nColGroup):
-#            jB = (j + Bs + nColGroup) % nColGroup
-#            group[i,j] = group0[iA,j] + group0[iB,jB]

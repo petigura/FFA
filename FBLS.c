@@ -71,16 +71,14 @@ void maxDelTt0(double* XsumP, double* XXsumP, double* XcntP, int P,
 	      *s2nMa = s2n;
 	      *iMa   = i;
 	      *kMa   = k;
-
-	  if (s2n > 10)
-	    {
-	      printf("%f %i %f %f %f\n",mDepth,DelT,sigma,s2n,XcntPDelT[k]);
 	    }
-
-
-	    }
-
+	      
 	}
+
+      printf("%f %f %f %i %f %f\n",mDepth,XXsumPDelT[*kMa], XcntPDelT[*kMa], DelT,sqrt( XXsumPDelT[*kMa] / XcntPDelT[*kMa] - (XsumPDelT[*kMa] / XcntPDelT[*kMa])*(XsumPDelT[*kMa] / XcntPDelT[*kMa] ) )  ,*s2nMa);
+		  
+
+
     }
 }
 
