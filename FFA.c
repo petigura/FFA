@@ -8,6 +8,7 @@ void FFAGroupShiftAdd(float* group0, float* group, int nRowGroup,int nColGroup)
 
   // Grow group by the maximum shift value
   // Loop over rows in group
+  // nColGroup number of columns in group
   for(i=0; i<nRowGroup; i++)
     {
       iA = i/2;                 //# Row in the group that A is draw from
@@ -18,10 +19,14 @@ void FFAGroupShiftAdd(float* group0, float* group, int nRowGroup,int nColGroup)
       step = i*nColGroup;
       stepA = iA*nColGroup;
       stepB = iB*nColGroup;
-      for (j=0; j<nColGroup; j++)
+      j = 0;
+      jB = Bs;
+      while (j < nColGroup)
 	  {
-            jB = (j + Bs + nColGroup) % nColGroup;
+	    if (jB==nColGroup) {jB=0;} //protect jb from rolling off the edge
 	    group[step+j] = group0[stepA+j] + group0[stepB+jB];
+	    j++;
+	    jB++;
 	  }
     }
 }

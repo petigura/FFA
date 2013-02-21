@@ -19,124 +19,243 @@ ctypedef np.int_t I_DTYPE_t
 @cython.wraparound(False)
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def FBLS(np.ndarray[DTYPE_t, ndim=2, mode='c'] XsumP, np.ndarray[DTYPE_t, ndim=2, mode='c'] XcntP, np.ndarray[DTYPE_t, ndim=1, mode='c'] DeltaTarr, np.ndarray[DTYPE_t, ndim=1, mode='c'] noiseG, long nP, long nt0, long nDeltaT):
+def FBLS(np.ndarray[DTYPE_t] XsumP, np.ndarray[DTYPE_t] XcntP, 
+         int delT1, int delT2, long nt0):
     """
-    Fast BLS
+    Fast BLS.
 
-    Given an evenly-spaced time series:
+    Copy of BLS from Kovacs. Compute signal residue `SR` using the
+    output of the FFA.
 
-    P = P0 + i / M - 1
+    Parameters 
+    ----------
 
-    Where i ranges from 0 to M-1.
-
-    DeltaT : various widths of the transit
-
-    Xdata elements are summed (set to 0 to ignore). Xmask keeps track
-    of how many points went into the sum.
-    
-    Xmask : 1 if point is to be counted, 0 if not 
-
+    XsumP - sums of data values (slice of FFA)
+    XcntP - sums of weights (slice of FFA)
+    delT1 - Shortest width to search over
+    delT2 - Longest width to search over.
+    nt0 - number of epochs searched over.
 
     Returns
     -------
-    s2n : length M array with s2n (marginalized over deltaT and ep)
-    kMa : length M array with k index of maximum s2n
-    iMa : length M array with i index of maximum s2n
-
-              i - specifies delta T
-              j - specifies P
-              k - specifies epoch 
+    SRma   = Maximum Signal Residue
+    delTma = Transit width corresponding to SRma
+    t0ma   = Index of the begining of the transit corresponding to SRma
     """
-    cdef int i,j,iMa2,kMa2,kMa1
-    cdef float s2nMa1, s2nMa2
-    cdef np.ndarray[DTYPE_t, ndim=1, mode='c'] Xsum, Xcnt
+    cdef int i1,i2,delT
+    cdef float s,Nin,pow,powma
+    cdef float N = np.sum(XcntP) # Sum the weights
 
-    cdef np.ndarray[I_DTYPE_t] iMa = np.zeros(nP,dtype=I_DTYPE)
-    cdef np.ndarray[I_DTYPE_t] kMa = np.zeros(nP,dtype=I_DTYPE)
-    cdef np.ndarray[DTYPE_t] s2nMa = np.zeros(nP,dtype=DTYPE)
-
-    for j in range(nP):
-        Xsum  = XsumP[j]
-        Xcnt  = XcntP[j]
-
-        iMa2   = 0
-        kMa2   = 0 
-        s2nMa2 = 0
-        for i in range(nDeltaT):
-            DeltaT = DeltaTarr[i]
-            XsumPDeltaT  = boxsum(Xsum,nt0,DeltaT)
-            XcntPDeltaT  = boxsum(Xcnt,nt0,DeltaT)
-            
-            # Average of in transit points
-            meanVal = XsumPDeltaT / XcntPDeltaT 
-            mDepth  = hat(meanVal,nt0,DeltaT)
-            
-            s2n     = mDepth / noiseG[i] * np.sqrt( XcntPDeltaT / DeltaT )
-            kMa1    = np.argmax(s2n)
-            s2nMa1  = s2n[kMa1]
-            if s2nMa1 > s2nMa2:
-                s2nMa2 = s2nMa1
-                iMa2   = i
-                kMa2   = kMa1
-
-        iMa[j]   = iMa2
-        kMa[j]   = kMa2
-        s2nMa[j] = s2nMa2
-    return s2nMa,iMa,kMa
-
-
-@cython.profile(True)
-@cython.wraparound(False)
-@cython.boundscheck(False)
-@cython.cdivision(True)
-def boxsum(np.ndarray[DTYPE_t, ndim=1] X, int N, int DeltaT):
-    """
-    Box Sum
-
-    For element in `X` sum points between X[i] and X[i+DeltaT],
-    wrapping as needed. We first sum up X[0:DeltaT]. The we move along
-    the arary, adding one new point to the front and subtracting one
-    old point from the back.
-    """
-    cdef int iFirst,iLast,ind
-    cdef DTYPE_t total=0 # keeps a running total.
-    cdef np.ndarray[DTYPE_t, ndim=1] res = np.zeros(N) 
-
-    iFirst = 0
-    for iLast in range(DeltaT):
-        total += X[iLast]
-    
-    while iFirst < N:
-        res[iFirst] = total
-
-        # increase the limits by 1
-        iFirst += 1
-        iLast  = (iFirst + DeltaT) % N
+    powma = 0
+    for i1 in range(nt0): # i is index of starting transit
+        delT  = 1  # counter that keeps track of the width of the boxes 
+        i2    = i1
+        s     = 0 # running total of data values 
+        Nin   = 0 # running total of weights
         
-        total -= X[ iFirst-1 ] # Kick out the oldest point
-        total += X[ iLast ]    # Drop in the first point
+        while delT <= delT2:
+            if i2 == nt0: # If index runs past the end of the array, wrap around
+                i2 = 0
 
-    return res
+            s    += XsumP[i2]
+            Nin  += XcntP[i2]
 
-@cython.profile(True)
+            if delT >= delT1: # Start computing SR
+                pow = s*s/(Nin*(N - Nin))
+                if pow > powma:
+                    powma  = pow
+                    t0ma   = i1
+                    delTma = delT
+            delT +=1
+            i2   += 1 
+    SRma = sqrt(powma)
+    return SRma,delTma,t0ma
+
+cdef extern from "math.h":
+    double sqrt(double)
+
+#cython: cdivision=True
 @cython.wraparound(False)
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def hat(np.ndarray[DTYPE_t, ndim=1,mode='c'] X,
-        int N, int DeltaT):
+def FBLS_SNR(np.ndarray[DTYPE_t] XsumP, np.ndarray[DTYPE_t] XcntP,
+             np.ndarray[DTYPE_t] XXsumP, 
+             int delT1, int delT2, long nt0):
     """
-    For every index i in X We calculate the difference between the
-    X[i] and the average of X[i-DeltaT] and X[i+Delta] wrapping if
-    necessary
-    """
-    cdef int i, jBefore, jAfter
-    cdef np.ndarray[DTYPE_t, ndim=1] res = np.zeros(N)
-    for i in range(N):
-        jBefore = (i+N - DeltaT) % N
-        jAfter  = (i+N + DeltaT) % N        
-        res[i] = 0.5* (X[jBefore] + X[jAfter]) - X[i]
-        if i < 10:
-            print jBefore,jAfter
+    Fast BLS.
 
-    return res
+    Copy of BLS from Kovacs. Compute signal residue `SR` using the
+    output of the FFA.
+
+    Parameters 
+    ----------
+
+    XsumP - sums of data values (slice of FFA)
+    XcntP - sums of weights (slice of FFA)
+    delT1 - Shortest width to search over
+    delT2 - Longest width to search over.
+    nt0 - number of epochs searched over.
+
+    Returns
+    -------
+    SRma   = Maximum Signal Residue
+    delTma = Transit width corresponding to SRma
+    t0ma   = Index of the begining of the transit corresponding to SRma
+    """
+    cdef int i1,i2,delT
+    cdef float s,ss,Nin,SNR,SNRma
+    cdef float N = np.sum(XcntP) # Sum the weights
+    cdef float pow,powma
+    SNRma = 0
+    for i1 in range(nt0): # i is index of starting transit
+        delT  = 1  # counter that keeps track of the width of the boxes 
+        i2    = i1
+        s     = 0 # running total of data values 
+        ss    = 0
+        Nin   = 0 # running total of weights
+        
+        while delT <= delT2:
+            if i2 == nt0: # If index runs past the end of the array, wrap around
+                i2 = 0
+                
+            s    += XsumP[i2]
+            ss   += XXsumP[i2]
+            Nin  += XcntP[i2]
+
+            if delT >= delT1: # Start computing SR
+                pow = s*s/(Nin*(N - Nin))
+                SNR = - s * N / (N - Nin) / sqrt(ss - s*s/Nin)
+
+                if SNR > SNRma:
+                    powma  = pow
+                    t0ma   = i1
+                    delTma = delT
+                    SNRma  = SNR
+
+            delT +=1
+            i2   += 1 
+    SRma = sqrt(powma)
+    return SNRma,SRma,delTma,t0ma
+
+
+
+#cython: cdivision=True
+@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def FBLS_SR(np.ndarray[DTYPE_t] XsumP, np.ndarray[DTYPE_t] XcntP,
+             np.ndarray[DTYPE_t] XXsumP, 
+             int delT1, int delT2, long nt0):
+    """
+    Fast BLS.
+
+    Copy of BLS from Kovacs. Compute signal residue `SR` using the
+    output of the FFA.
+
+    Parameters 
+    ----------
+
+    XsumP - sums of data values (slice of FFA)
+    XcntP - sums of weights (slice of FFA)
+    delT1 - Shortest width to search over
+    delT2 - Longest width to search over.
+    nt0 - number of epochs searched over.
+
+    Returns
+    -------
+    SRma   = Maximum Signal Residue
+    delTma = Transit width corresponding to SRma
+    t0ma   = Index of the begining of the transit corresponding to SRma
+    """
+    cdef int i1,i2,delT
+    cdef float s,ss,Nin,SNR,SNRma
+    cdef float N = np.sum(XcntP) # Sum the weights
+    cdef float pow,powma
+    SNRma = 0
+    for i1 in range(nt0): # i is index of starting transit
+        delT  = 1  # counter that keeps track of the width of the boxes 
+        i2    = i1
+        s     = 0 # running total of data values 
+        ss    = 0
+        Nin   = 0 # running total of weights
+        
+        while delT <= delT2:
+            if i2 == nt0: # If index runs past the end of the array, wrap around
+                i2 = 0
+                
+            s    += XsumP[i2]
+            ss   += XXsumP[i2]
+            Nin  += XcntP[i2]
+
+            if delT >= delT1: # Start computing SR
+                pow = s*s/(Nin*(N - Nin))
+                SNR = - s * N / (N - Nin) / sqrt(ss - s*s/Nin)
+
+                if (pow > powma) & (s < 0):
+                    powma  = pow
+                    t0ma   = i1
+                    delTma = delT
+                    SNRma  = SNR
+
+            delT +=1
+            i2   += 1 
+    SRma = sqrt(powma)
+    return SNRma,SRma,delTma,t0ma
+
+
+@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def FBLS_SRCC(np.ndarray[DTYPE_t] XsumP, np.ndarray[DTYPE_t] XcntP,
+              int delT1, int delT2, long nt0):
+    """
+    Fast BLS.
+
+    Copy of BLS from Kovacs. Compute signal residue `SR` using the
+    output of the FFA.
+
+    Parameters 
+    ----------
+
+    XsumP - sums of data values (slice of FFA)
+    XcntP - sums of weights (slice of FFA)
+    delT1 - Shortest width to search over
+    delT2 - Longest width to search over.
+    nt0 - number of epochs searched over.
+
+    Returns
+    -------
+    SRma   = Maximum Signal Residue
+    delTma = Transit width corresponding to SRma
+    t0ma   = Index of the begining of the transit corresponding to SRma
+    """
+    cdef int i1,i2,delT
+    cdef float s,Nin
+    cdef float N = np.sum(XcntP) # Sum the weights
+    cdef float pow,powma
+
+    powma = 0.
+    for i1 in range(nt0): # i is index of starting transit
+        delT  = 1  # counter that keeps track of the width of the boxes 
+        i2    = i1
+        s     = 0 # running total of data values 
+        Nin   = 0 # running total of weights        
+        while delT <= delT2:
+            if i2 == nt0: # If index runs past the end of the array, wrap around
+                i2 = 0
+
+            s    += XsumP[i2]
+            Nin  += XcntP[i2]
+
+            if delT >= delT1: # Start computing SR
+                pow = s*s/(Nin*(N - Nin))
+                if (pow > powma):
+                    powma  = pow
+                    t0ma   = i1
+                    delTma = delT
+
+            delT +=1
+            i2   += 1 
+    SRma = sqrt(powma)
+    return SRma,delTma,t0ma
 
