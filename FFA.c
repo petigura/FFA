@@ -5,10 +5,18 @@ void FFAGroupShiftAdd(float* group0, float* group, int nRowGroup,int nColGroup)
 {
   int iA,iB,Bs,jB,i,j,step,stepA,stepB;
   int nRowGroupOn2 = nRowGroup / 2; // Half the group size
+  /*
+  Grow group by the maximum shift value
+  Loop over rows in group
+  nColGroup number of columns in group
 
-  // Grow group by the maximum shift value
-  // Loop over rows in group
-  // nColGroup number of columns in group
+  jB is the column number from which to pull the second value. For some reason, 
+
+
+  //  jB = (j + Bs + nColGroup) % nColGroup;
+  //  if (jB==nColGroup) {jB=0;} //protect jb from rolling off the edge
+  */
+
   for(i=0; i<nRowGroup; i++)
     {
       iA = i/2;                 //# Row in the group that A is draw from
@@ -23,7 +31,8 @@ void FFAGroupShiftAdd(float* group0, float* group, int nRowGroup,int nColGroup)
       jB = Bs;
       while (j < nColGroup)
 	  {
-	    if (jB==nColGroup) {jB=0;} //protect jb from rolling off the edge
+	    jB = (j + Bs + nColGroup) % nColGroup;
+	    // if (jB==nColGroup) {jB=0;} //protect jb from rolling off the edge
 	    group[step+j] = group0[stepA+j] + group0[stepB+jB];
 	    j++;
 	    jB++;
