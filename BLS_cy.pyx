@@ -20,7 +20,7 @@ def BLS_SNR(np.ndarray[DTYPE_t] t, np.ndarray[DTYPE_t] f,
     cdef long nP  = Parr.size
     cdef long N   = t.size
 
-    cdef int delT,delT1,delT2,i1,i2,j
+    cdef int delT,delT1,delT2
     cdef float s,ss,snr,snrma,Nin,ph,freq,P,rN
 
     rN = float(N) # for computation of SNR I need a float 
@@ -32,6 +32,8 @@ def BLS_SNR(np.ndarray[DTYPE_t] t, np.ndarray[DTYPE_t] f,
     cdef np.ndarray[DTYPE_t] y   = np.empty(nb) # sum of measurements
     cdef np.ndarray[DTYPE_t] yy  = np.empty(nb) # sum of measurements squared
     cdef np.ndarray[DTYPE_t] u = t - t[0]
+
+    cdef int iP,ib,i,i1,i2,j # counters
 
     # Stores the maximum value of SNR at each trial period.
     cdef np.ndarray[DTYPE_t] SNR = np.empty(nP) 
@@ -82,12 +84,10 @@ def BLS_SNR(np.ndarray[DTYPE_t] t, np.ndarray[DTYPE_t] f,
                     snr = - s*s / (ss - s*s/Nin)
                     if (snr > snrma):
                         snrma  = snr
-                        t0ma   = i1
-                        delTma = delT
 
                 delT +=1
                 i2   += 1 
 
         SNR[iP] = sqrt(snrma)
 
-    return SNR,delTma,t0ma
+    return SNR

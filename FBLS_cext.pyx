@@ -24,6 +24,7 @@ def cmaxDelTt0( cnp.ndarray[double, ndim=2,mode='c'] XsumP,
 
     cdef int M = XsumP.shape[0]
     cdef int j
+
     
     cdef cnp.ndarray[double, ndim=1,mode='c'] s2nMa = np.zeros(M) - 1
     cdef cnp.ndarray[int, ndim=1,mode='c']    iMa   = np.zeros(M,np.int32) -1 

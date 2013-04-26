@@ -17,6 +17,9 @@ ext_modules = [Extension(name="FFA_cy",
                          include_dirs=[numpy.get_include()]),
                Extension(name="FBLS_cext",
                          sources=["FBLS_cext.pyx","FBLS.c"],
+                         include_dirs=[numpy.get_include()]),
+               Extension(name="BLS_cext",
+                         sources=["BLS_cext.pyx","BLS.c"],
                          include_dirs=[numpy.get_include()])
                ]
 
