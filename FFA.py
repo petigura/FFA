@@ -155,49 +155,6 @@ def FFAShiftAdd(XW0,stage):
 
     return XW
 
-def XWrap(x,Pcad,fill_value=0,pow2=False):
-    """
-    Extend and wrap array.
-    
-    Fold array every y indecies.  There will typically be a hanging
-    part of the array.  This is padded out.
-
-    Parameters
-    ----------
-
-    x     : input
-    Pcad0 : Base period
-    rem   : The actual period can be longer by rem/nrow
-    pow2  : If true, pad out nRows so that it's the next power of 2.
-
-    Return
-    ------
-
-    xwrap : Wrapped array.
-    """
-
-    ncad = x.size # Number of cadences
-    # for some reason np.ceil(ncad/Pcad0) doesn't work!
-    Pcad0 = np.floor(Pcad)
-    nrow = int( np.floor(ncad/Pcad0) +1 )
-    rem = np.round(nrow * (Pcad - Pcad0))
-
-    nExtend = nrow * Pcad0 - ncad # Pad out remainder of array with 0s.
-
-    if type(x) is np.ma.core.MaskedArray:
-        pad = ma.empty(nExtend)
-        pad.mask = True
-        x = ma.hstack( (x ,pad) )
-    else:    
-        pad = np.empty(nExtend) 
-        pad[:] = fill_value
-        x = np.hstack( (x ,pad) )
-
-    xwrap = x.reshape( nrow,-1 )
-    idShf = remShuffle(xwrap.shape,rem)
-    xwrap = xwrap[idShf]
-    return xwrap
-
 def XWrap2(x,P0,fill_value=0,pow2=False):
     """
     Extend and wrap array.

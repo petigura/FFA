@@ -115,7 +115,8 @@ def XWrap(x,Pcad,fill_value=0):
     Pcad0 = np.floor(Pcad)
     nrow = int( np.floor(ncad/Pcad0) +1 )
     rem  = int(np.round(Pcad0 * (Pcad-Pcad0)  ))
-    nExtend = nrow * Pcad0 - ncad # Pad out remainder of array with 0s.
+    nExtend = int(nrow * Pcad0 - ncad) # Pad out remainder of array with 0s.
+    
 
     if type(x) is np.ma.core.MaskedArray:
         pad = ma.empty(nExtend)
