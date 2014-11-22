@@ -20,7 +20,10 @@ ext_modules = [Extension(name="FFA_cy",
                          include_dirs=[numpy.get_include()]),
                Extension(name="BLS_cext",
                          sources=["BLS_cext.pyx","BLS.c"],
+                         include_dirs=[numpy.get_include()]),
+               Extension(name="fold",
+                         sources=["fold.pyx"],
                          include_dirs=[numpy.get_include()])
-               ]
+           ]
 
 setup(cmdclass={'build_ext': build_ext}, ext_modules=ext_modules)

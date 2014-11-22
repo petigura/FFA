@@ -89,6 +89,9 @@ def cFFAShiftAdd(cnp.ndarray[cnp.float32_t, ndim=2,mode='c'] XW0,
                  int stage, int nRow, int nCol):
     FFAShiftAdd(<cnp.float32_t*> XW0.data,<cnp.float32_t*> XW.data,stage, nRow, nCol)
 
+
+
+
 ### Adding extra functions
 
 
@@ -208,3 +211,5 @@ def remShuffle(shape,rem):
         icol[i] = np.roll(icol[i],-colshift[i])
 
     return irow,icol
+
+
