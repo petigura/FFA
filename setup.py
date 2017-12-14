@@ -4,26 +4,30 @@ from Cython.Distutils import build_ext
 import numpy
 
 ext_modules = [Extension(name="FFA_cy",
-                         sources=["FFA_cy.pyx"],
+                         sources=["FFA/FFA_cy.pyx"],
                          include_dirs=[numpy.get_include()]), 
                Extension(name="FBLS_cy",
-                         sources=["FBLS_cy.pyx"],
+                         sources=["FFA/FBLS_cy.pyx"],
                          include_dirs=[numpy.get_include()]),
                Extension(name="BLS_cy",
-                         sources=["BLS_cy.pyx"],
+                         sources=["FFA/BLS_cy.pyx"],
                          include_dirs=[numpy.get_include()]),
               Extension(name="FFA_cext",
-                         sources=["FFA_cext.pyx","FFA.c"],
+                         sources=["FFA/FFA_cext.pyx","FFA/FFA.c"],
                          include_dirs=[numpy.get_include()]),
                Extension(name="FBLS_cext",
-                         sources=["FBLS_cext.pyx","FBLS.c"],
+                         sources=["FFA/FBLS_cext.pyx","FFA/FBLS.c"],
                          include_dirs=[numpy.get_include()]),
                Extension(name="BLS_cext",
-                         sources=["BLS_cext.pyx","BLS.c"],
+                         sources=["FFA/BLS_cext.pyx","FFA/BLS.c"],
                          include_dirs=[numpy.get_include()]),
                Extension(name="fold",
-                         sources=["fold.pyx"],
+                         sources=["FFA/fold.pyx"],
                          include_dirs=[numpy.get_include()])
            ]
 
-setup(cmdclass={'build_ext': build_ext}, ext_modules=ext_modules)
+setup(
+    cmdclass={'build_ext': build_ext},
+    ext_modules=ext_modules,
+    name='FFA',
+    packages=['FFA'])

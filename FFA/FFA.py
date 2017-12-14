@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 import numpy as np
 from numpy import ma
 
@@ -144,7 +146,7 @@ def FFAShiftAdd(XW0,stage):
     """
     nRow      = XW0.shape[0]
     nRowGroup = 2**stage
-    nGroup    = nRow/nRowGroup
+    nGroup    = nRow//nRowGroup
     XW        = np.empty(XW0.shape)
     Arow,Brow,Bshft = FFAButterfly(stage)
     for iGroup in range(nGroup):
