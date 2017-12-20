@@ -4,9 +4,11 @@ Various implementations of the Fast-Folding Algorithm proposed by Staelin (1969)
 The FFA will fold and sum elements from an array on various periods that are determined by the algorithm. Like the FFT,
 the FFA eliminates redundant summations through a clever bookkeeping of intermediate results. 
 
-FFA/FFA.py - python implementation 
-FFA/FFA_cy.pyx - pure cython implementation 
-FFA/FFA_cext.pyx - cython extension that wraps native C code (in FFA/FFA.c)
+To get started, have a look at the docstrings here: 
+
+- `FFA/FFA.py` - python implementation 
+- `FFA/FFA_cy.pyx` - pure cython implementation 
+- `FFA/FFA_cext.pyx` - cython extension that wraps native C code (in FFA/FFA.c)
 
 # Contributors
 - petigura 
