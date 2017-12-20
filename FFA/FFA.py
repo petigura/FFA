@@ -101,6 +101,9 @@ def FFAGroupShiftAdd(group0,Arow,Brow,Bshft):
     sizes = np.array([Arow.size, Brow.size, Bshft.size])
     assert (sizes == nRowGroup).all() , 'Number of rows in group must agree with butterfly output'
 
+    # Adjust for greater than one cycle wrapping
+    Bshft = Bshft % nColGroup
+
     # Grow group by the maximum shift value
     maxShft = max(Bshft)
     group0 = np.hstack( [group0 , group0[:,: maxShft]] )
