@@ -30,4 +30,10 @@ setup(
     cmdclass={'build_ext': build_ext},
     ext_modules=ext_modules,
     name='FFA',
-    packages=['FFA'])
+    packages=['FFA'],
+    package_data = {
+        'FFA': ['sample_data/*']
+    },
+    requires=['numpy', 'cython'],
+    version='0.0.1',
+)
