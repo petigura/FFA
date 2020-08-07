@@ -13,6 +13,7 @@ To get started, have a look at the docstrings here:
 # Contributors
 - petigura 
 - piscisvolans (Python 3) support
+- dmopalmer 
 
 # Wish list
 - Proper unit tests
