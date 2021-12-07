@@ -1,5 +1,6 @@
 #include "FFA.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 void FFAGroupShiftAdd(float* group0, float* group, int nRowGroup,int nColGroup)
 {
