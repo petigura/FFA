@@ -9,10 +9,10 @@ import FFA_cy as FFA
 cimport cython
 cimport numpy as np
 
-DTYPE  = np.float
+DTYPE  = float
 ctypedef np.float_t DTYPE_t
 
-I_DTYPE = np.int
+I_DTYPE = int
 ctypedef np.int_t I_DTYPE_t
 
 #cython: cdivision=True
