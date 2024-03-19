@@ -37,5 +37,5 @@ setup(
         'FFA': ['sample_data/*']
     },
     requires=['numpy', 'cython'],
-    version='0.0.1',
+    version='0.0.2',
 )
