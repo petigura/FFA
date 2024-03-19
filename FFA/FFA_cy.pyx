@@ -126,7 +126,7 @@ def FFAShiftAdd(cnp.ndarray[cnp.float32_t, ndim=2] XW0,
 
     nRow = XW0.shape[0]
     nCol = XW0.shape[1]
-    nRowGroup = 2**stage
+    nRowGroup = int(2**stage)
     nGroup    = int(nRow/nRowGroup)
     XW =  np.zeros((nRow,nCol),dtype=np.float32)
     for iGroup in range(nGroup):
