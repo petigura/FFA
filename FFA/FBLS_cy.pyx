@@ -12,9 +12,6 @@ cimport numpy as np
 DTYPE  = float
 ctypedef np.float_t DTYPE_t
 
-I_DTYPE = int
-ctypedef np.int_t I_DTYPE_t
-
 #cython: cdivision=True
 @cython.wraparound(False)
 @cython.boundscheck(False)
